@@ -43,7 +43,7 @@ module.exports = {
 		const user = await User.findOne({ email: email });
 		if (!user) {
 			const error = new Error("User not found.");
-			error.code = 401;
+			error.code = 404;
 			throw error;
 		}
 		const isEqual = await bcrypt.compare(password, user.password);
@@ -230,5 +230,35 @@ module.exports = {
     user.posts.pull(id);
     await user.save();
     return true;
-  },
+	},
+	user: async function(args, req){
+		if (!req.isAuth) {
+			const error = new Error("Not authenticated!");
+			error.code = 401;
+			throw error;
+		}
+		const user = await User.findById(req.userId);
+		if (!user) {
+			const error = new Error("User not found.");
+			error.code = 404;
+			throw error;
+		}	
+		return {...user._doc,_id:user._id.toString()}
+	},
+	updateStatus: async function({status}, req){
+		if (!req.isAuth) {
+			const error = new Error("Not authenticated!");
+			error.code = 401;
+			throw error;
+		}
+		const user = await User.findById(req.userId);
+		if (!user) {
+			const error = new Error("User not found.");
+			error.code = 404;
+			throw error;
+		}
+		user.status= status;
+		await user.save()
+		return {...user._doc,_id:user._id.toString()}
+	}
 };
